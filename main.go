@@ -58,57 +58,34 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "down", "j":
 			if m.table.Cursor() == m.table.Height()-1 && !m.loading && m.endCursor != nil && m.lastPage != m.page {
-				if _, exists := m.pages[m.page+1]; exists {
-					m.page++
-					m.loadCachedPage()
-					m.table.GotoTop()
-					return m, nil
-				}
-
-				m.loading = true
-				return m, tea.Batch(m.spinner.Tick, fetchForks(m.owner, m.name, m.headRef, m.page+1, m.sortBy, m.endCursor))
+				return m.gotoNextPage()
 			}
 		case "up", "k":
 			if m.table.Cursor() == 0 && m.page > 0 {
-				m.page--
-				m.loadCachedPage()
+				m.gotoPreviousPage()
 				m.table.GotoBottom()
 				return m, nil
 			}
 		case "left", "h":
 			if m.page > 0 && !m.loading {
-				m.page--
-				m.loadCachedPage()
-				return m, nil
+				return m.gotoPreviousPage()
 			}
 		case "right", "l":
 			if !m.loading && m.endCursor != nil && m.lastPage != m.page {
-				if _, exists := m.pages[m.page+1]; exists {
-					m.page++
-					m.loadCachedPage()
-					m.table.GotoTop()
-					return m, nil
-				}
-
-				m.loading = true
-				return m, tea.Batch(m.spinner.Tick, fetchForks(m.owner, m.name, m.headRef, m.page+1, m.sortBy, m.endCursor))
+				return m.gotoNextPage()
 			}
 		case "s":
 			if !m.loading {
 				m.loading = true
 				m.sortBy = "STARGAZERS"
-				m.forks = nil
-				m.pages = make(map[int][]Fork)
-				m.lastPage = -1
+				m.clearModel()
 				return m, tea.Batch(m.spinner.Tick, fetchForks(m.owner, m.name, m.headRef, 0, m.sortBy, nil))
 			}
 		case "u":
 			if !m.loading {
 				m.loading = true
 				m.sortBy = "UPDATED_AT"
-				m.forks = nil
-				m.pages = make(map[int][]Fork)
-				m.lastPage = -1
+				m.clearModel()
 				return m, tea.Batch(m.spinner.Tick, fetchForks(m.owner, m.name, m.headRef, 0, m.sortBy, nil))
 			}
 		case "enter":
@@ -154,6 +131,30 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	m.table, cmd = m.table.Update(msg)
 	return m, cmd
+}
+
+func (m *model) gotoNextPage() (tea.Model, tea.Cmd) {
+	if _, exists := m.pages[m.page+1]; exists {
+		m.page++
+		m.loadCachedPage()
+		m.table.GotoTop()
+		return m, nil
+	}
+
+	m.loading = true
+	return m, tea.Batch(m.spinner.Tick, fetchForks(m.owner, m.name, m.headRef, m.page+1, m.sortBy, m.endCursor))
+}
+
+func (m *model) gotoPreviousPage() (tea.Model, tea.Cmd) {
+	m.page--
+	m.loadCachedPage()
+	return m, nil
+}
+
+func (m *model) clearModel() {
+	m.forks = nil
+	m.pages = make(map[int][]Fork)
+	m.lastPage = -1
 }
 
 func openBrowser(url string, stdout, stderr io.Writer) error {
@@ -208,7 +209,7 @@ type forksLoadedMsg struct {
 
 func fetchForks(owner, name, headRef string, page int, sortBy string, endCursor *string) tea.Cmd {
 	return func() tea.Msg {
-		opts := api.ClientOptions{EnableCache: false}
+		opts := api.ClientOptions{EnableCache: true}
 		client, err := api.NewGraphQLClient(opts)
 		if err != nil {
 			log.Fatal(err)
