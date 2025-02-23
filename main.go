@@ -14,7 +14,6 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/bubbletea"
-	"github.com/cli/go-gh"
 	"github.com/cli/go-gh/v2/pkg/api"
 	"github.com/cli/go-gh/v2/pkg/repository"
 	graphql "github.com/shurcooL/githubv4"
@@ -345,13 +344,14 @@ func main() {
 		owner = r.Owner
 		name = r.Name
 	} else {
-		r, err := gh.CurrentRepository()
+
+		r, err := repository.Current()
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
 			os.Exit(1)
 		}
-		owner = r.Owner()
-		name = r.Name()
+		owner = r.Owner
+		name = r.Name
 	}
 
 	defaultBranch, err := getDefaultBranch(owner, name)
