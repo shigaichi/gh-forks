@@ -5,7 +5,6 @@ go 1.23.1
 require (
 	github.com/charmbracelet/bubbles v0.20.0
 	github.com/charmbracelet/bubbletea v1.1.0
-	github.com/cli/go-gh v1.2.1
 	github.com/cli/go-gh/v2 v2.11.2
 	github.com/shurcooL/githubv4 v0.0.0-20240727222349-48295856cce7
 )
