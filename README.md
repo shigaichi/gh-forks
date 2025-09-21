@@ -60,6 +60,22 @@ user2/fork2                        87     0        2       2025-02-16  1
 ...
 ```
 
+## Local Development
+
+If you want to develop this extension locally, you can install it from the current directory:
+
+1. Remove the extension first if it is already installed:
+
+   ```sh
+   $ gh extension remove forks
+   ```
+
+2. From the root of this repository, install the local version:
+
+   ```sh
+   $ gh extension install .
+   ```
+
 ## Requirements
 
 - `gh` (GitHub CLI) installed
